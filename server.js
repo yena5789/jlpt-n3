@@ -88,7 +88,7 @@ app.post("/api/question", async (req, res) => {
   }
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`서버 실행 중: http://localhost:${PORT}`);
+  console.log(`서버 실행 중: 포트 ${PORT}`);
 });
