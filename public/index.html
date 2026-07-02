@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<title>JLPT N3 벼락치기</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    font-family: -apple-system, "Malgun Gothic", sans-serif;
+    background: #f5f5f7;
+    touch-action: manipulation;
+  }
+  .app {
+    height: 100dvh;
+    max-width: 480px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px;
+  }
+
+  header { flex-shrink: 0; padding-top: 14px; }
+  h1 { text-align: center; font-size: clamp(18px, 5vw, 21px); color: #222; margin: 0 0 2px; }
+  .subtitle { text-align: center; color: #888; font-size: 12px; margin-bottom: 12px; }
+
+  .categories { display: flex; gap: 6px; margin-bottom: 10px; }
+  .cat-btn {
+    flex: 1; padding: 11px 4px; border-radius: 10px; border: 1px solid #ccc;
+    background: white; cursor: pointer; font-size: 14px; color: #555;
+    min-height: 44px;
+  }
+  .cat-btn.active { background: #222; color: white; border-color: #222; }
+  .cat-btn:active { transform: scale(0.97); }
+
+  .score-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    background: white; border-radius: 10px; padding: 10px 14px;
+    margin-bottom: 10px; font-size: 13px; color: #444;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .score-bar b { color: #222; }
+
+  main.content {
+    flex: 1;
+    overflow-y: auto;
+    background: white; border-radius: 14px; padding: 20px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+  .question {
+    font-size: clamp(17px, 4.5vw, 20px); line-height: 1.6; color: #222; margin-bottom: 18px;
+  }
+  .choice {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; text-align: left; padding: 13px 14px;
+    margin-bottom: 9px; border-radius: 10px; border: 1.5px solid #ddd;
+    background: white; font-size: 15.5px; cursor: pointer;
+    min-height: 48px;
+  }
+  .choice:active:not(:disabled) { transform: scale(0.98); background: #fafafa; }
+  .choice .num {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: #eee; color: #555; font-size: 13px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .choice.correct { border-color: #2e8b57; background: #eafaf0; }
+  .choice.correct .num { background: #2e8b57; color: white; }
+  .choice.wrong { border-color: #d9534f; background: #fdecea; }
+  .choice.wrong .num { background: #d9534f; color: white; }
+  .choice:disabled { cursor: default; }
+
+  .explanation {
+    margin-top: 4px; padding: 12px 14px; background: #f0f4ff;
+    border-radius: 8px; font-size: 13.5px; color: #333; line-height: 1.5;
+  }
+
+  footer.bottom-actions {
+    flex-shrink: 0;
+    padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+  footer.bottom-actions button {
+    width: 100%; padding: 15px; border: none; border-radius: 12px;
+    background: #007aff; color: white; font-size: 16px; font-weight: 600; cursor: pointer;
+    min-height: 52px;
+    display: none;
+  }
+  footer.bottom-actions button:active { transform: scale(0.98); }
+
+  .loading, .error { text-align: center; color: #999; padding: 60px 0; font-size: 14px; }
+  .error { color: #d9534f; }
+  .error-retry {
+    display: block; margin: 16px auto 0; padding: 10px 20px;
+    border: 1px solid #ccc; border-radius: 8px; background: white; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🇯🇵 JLPT N3 벼락치기</h1>
+    <div class="subtitle">D-3 · 빠르게 훑는 단어·문법 퀴즈</div>
+    <div class="categories">
+      <button class="cat-btn active" data-cat="mixed">혼합</button>
+      <button class="cat-btn" data-cat="vocab">단어</button>
+      <button class="cat-btn" data-cat="grammar">문법</button>
+    </div>
+    <div class="score-bar">
+      <span>정답 <b id="correctCount">0</b> / <span id="totalCount">0</span></span>
+      <span>정답률 <b id="accuracy">0%</b></span>
+    </div>
+  </header>
+
+  <main class="content" id="card">
+    <div class="loading">문제 불러오는 중...</div>
+  </main>
+
+  <footer class="bottom-actions">
+    <button id="nextBtn">다음 문제 →</button>
+  </footer>
+</div>
+
+<script>
+  const cardEl = document.getElementById("card");
+  const nextBtn = document.getElementById("nextBtn");
+  const correctCountEl = document.getElementById("correctCount");
+  const totalCountEl = document.getElementById("totalCount");
+  const accuracyEl = document.getElementById("accuracy");
+  const catButtons = document.querySelectorAll(".cat-btn");
+
+  let currentCategory = "mixed";
+  let currentQuiz = null;
+  let correct = 0;
+  let total = 0;
+  let answered = false;
+  let loading = false;
+
+  function vibrate(pattern) {
+    if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+  }
+
+  catButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (loading) return;
+      catButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentCategory = btn.dataset.cat;
+      loadQuestion();
+    });
+  });
+
+  nextBtn.addEventListener("click", () => { if (!loading) loadQuestion(); });
+
+  function updateScore() {
+    correctCountEl.textContent = correct;
+    totalCountEl.textContent = total;
+    accuracyEl.textContent = total === 0 ? "0%" : Math.round((correct / total) * 100) + "%";
+  }
+
+  async function loadQuestion() {
+    answered = false;
+    loading = true;
+    nextBtn.style.display = "none";
+    cardEl.innerHTML = `<div class="loading">문제 불러오는 중...</div>`;
+    try {
+      const res = await fetch("/api/question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: currentCategory })
+      });
+      const data = await res.json();
+      loading = false;
+      if (data.error) {
+        showError(data.error);
+        return;
+      }
+      currentQuiz = data;
+      renderQuestion();
+    } catch (e) {
+      loading = false;
+      showError("네트워크 오류가 발생했어요.");
+    }
+  }
+
+  function showError(msg) {
+    cardEl.innerHTML = `<div class="error">${msg}<button class="error-retry" id="retryBtn">다시 시도</button></div>`;
+    document.getElementById("retryBtn").addEventListener("click", loadQuestion);
+  }
+
+  function renderQuestion() {
+    const q = currentQuiz;
+    cardEl.innerHTML = `
+      <div class="question">${q.question}</div>
+      <div id="choicesWrap"></div>
+      <div class="explanation" id="explanation" style="display:none;"></div>
+    `;
+    const wrap = document.getElementById("choicesWrap");
+    q.choices.forEach((choice, idx) => {
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.innerHTML = `<span class="num">${idx + 1}</span><span>${choice}</span>`;
+      btn.addEventListener("click", () => selectAnswer(idx));
+      wrap.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(idx) {
+    if (answered) return;
+    answered = true;
+    total++;
+    const isCorrect = idx === currentQuiz.answerIndex;
+    if (isCorrect) { correct++; vibrate(15); } else { vibrate([30, 40, 30]); }
+    updateScore();
+
+    const buttons = document.querySelectorAll(".choice");
+    buttons.forEach((b, i) => {
+      b.disabled = true;
+      if (i === currentQuiz.answerIndex) b.classList.add("correct");
+      else if (i === idx) b.classList.add("wrong");
+    });
+
+    const expEl = document.getElementById("explanation");
+    expEl.textContent = (isCorrect ? "✅ 정답! " : "❌ 오답. ") + currentQuiz.explanation;
+    expEl.style.display = "block";
+    nextBtn.style.display = "block";
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (["1","2","3","4"].includes(e.key) && !answered && currentQuiz) {
+      selectAnswer(parseInt(e.key) - 1);
+    }
+    if (e.key === "Enter" && answered) loadQuestion();
+  });
+
+  loadQuestion();
+</script>
+</body>
+</html>
