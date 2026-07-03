@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = "gemini-3.5-flash-lite";
+const MODEL = "gemini-2.5-flash-lite";
 
 function buildSystemPrompt(category) {
   const categoryInstruction =
