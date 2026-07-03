@@ -1,9 +1,7 @@
 import express from "express";
-import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
-dotenv.config();
+import fs from "fs"; // 👈 문제은행 파일을 읽기 위해 추가
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,76 +10,46 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-const API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = "gemini-2.5-flash-lite";
-
-function buildSystemPrompt(category) {
-  const categoryInstruction =
-    category === "vocab"
-      ? "문자・어휘(한자읽기, 문맥규정, 유의어/바꿔말하기, 용법) 문제만 출제해줘."
-      : category === "grammar"
-      ? "문법(적절한 문형/조사/표현 고르기) 문제만 출제해줘."
-      : "문자・어휘와 문법 문제를 무작위로 섞어서 출제해줘.";
-
-  return `당신은 JLPT(일본어능력시험) N3 전문 출제위원입니다.
-실제 N3 기출 스타일과 최근 출제 경향(일상 회화/비즈니스 상황 표현, 가타카나 외래어, 뉘앙스 차이를 묻는 문제)을 반영해서 4지선다 객관식 문제를 출제해줘.
-
-${categoryInstruction}
-
-규칙:
-- 문제 문장(question)은 실제 시험처럼 일본어로 작성하고, 빈칸은 ___ 로 표시.
-- 선택지(choices)는 4개, 전부 일본어로.
-- 정답은 반드시 1개, 나머지는 헷갈릴 만한 오답으로.
-- 설명(explanation)은 한국어로 1~2문장, 핵심만 간결하게.
-- N3 수준을 정확히 지키고(N4처럼 너무 쉽거나 N2처럼 너무 어렵지 않게), 매번 다른 문형/단어로 다양하게 출제.
-
-반드시 아래 JSON 형식으로만 응답. 다른 텍스트나 마크다운 코드블록 없이 순수 JSON만:
-{
-  "question": "일본어 문제 문장",
-  "choices": ["선택지1", "선택지2", "선택지3", "선택지4"],
-  "answerIndex": 0,
-  "explanation": "한국어 설명"
-}`;
+// 🚀 [핵심] 132개 문제은행(questions.json) 로드하는 함수
+function getQuestions() {
+  try {
+    const filePath = path.join(__dirname, "questions.json");
+    const fileData = fs.readFileSync(filePath, "utf-8");
+    return JSON.parse(fileData);
+  } catch (error) {
+    console.error("questions.json 파일을 읽는 중 에러 발생:", error);
+    return [];
+  }
 }
 
+// 🎯 사용자가 요청한 카테고리에 맞춰 1개의 문제를 무작위로 반환하는 API
 app.post("/api/question", async (req, res) => {
   try {
-    const { category } = req.body;
-    const systemPrompt = buildSystemPrompt(category || "mixed");
+    const { category } = req.body; // 프론트엔드에서 보낸 카테고리 (vocab, grammar, mixed 등)
+    const allQuestions = getQuestions();
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemPrompt }] },
-          contents: [{ role: "user", parts: [{ text: "N3 문제 1개 출제해줘." }] }],
-          generationConfig: { temperature: 1.0 }
-        })
-      }
-    );
-
-    const data = await response.json();
-    if (!response.ok) {
-        console.error(data);
-        const friendlyMsg = response.status === 429
-          ? "잠깐 너무 빨리 풀었나봐요! 5초 정도 쉬었다가 다시 시도해주세요."
-          : (data.error?.message || "API 오류");
-        return res.status(500).json({ error: friendlyMsg });
-      }
-    let text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    text = text.trim().replace(/^```json/i, "").replace(/^```/, "").replace(/```$/, "").trim();
-
-    let quiz;
-    try {
-      quiz = JSON.parse(text);
-    } catch (e) {
-      console.error("JSON parse fail:", text);
-      return res.status(500).json({ error: "문제 생성 실패, 다시 시도해주세요." });
+    if (allQuestions.length === 0) {
+      return res.status(500).json({ error: "문제은행 데이터가 비어있거나 읽을 수 없습니다." });
     }
 
-    res.json(quiz);
+    // 1. 카테고리에 맞는 문제들만 필터링하기
+    let filtered = allQuestions;
+    if (category === "vocab" || category === "grammar") {
+      filtered = allQuestions.filter((q) => q.category === category);
+    }
+
+    // 만약 필터링된 문제가 없다면 전체에서 뽑기 (안전장치)
+    if (filtered.length === 0) {
+      filtered = allQuestions;
+    }
+
+    // 2. 필터링된 문제 중 1개를 무작위로 추첨하기
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    const selectedQuiz = filtered[randomIndex];
+
+    // 3. 폰(프론트엔드)으로 0.1초 만에 전송!
+    res.json(selectedQuiz);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "서버 오류가 발생했어요." });
