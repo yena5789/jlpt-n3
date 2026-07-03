@@ -1,162 +1,926 @@
-bash
-
-cat << 'PYEOF' > /home/claude/make_questions2.py
-import json
-
-questions = [
-  # ===== 기존 50개 유지 =====
-  # VOCAB 25개
-  {"question": "この仕事は思ったより___がかかった。", "choices": ["お金", "時間", "手間", "気持ち"], "answerIndex": 1, "explanation": "「時間がかかる」= 시간이 걸리다. 자주 출제되는 고정 표현이에요.", "category": "vocab"},
-  {"question": "彼女はいつも___な態度で人と話す。", "choices": ["丁寧", "親切", "素直", "元気"], "answerIndex": 0, "explanation": "「丁寧(ていねい)な態度」= 정중한 태도. 말하는 방식에 어울리는 단어예요.", "category": "vocab"},
-  {"question": "この店のケーキは___がいい。", "choices": ["評判", "人気", "印象", "評価"], "answerIndex": 1, "explanation": "「人気(にんき)がいい」= 인기가 좋다. 사람들에게 인기 있는 상태를 나타내요.", "category": "vocab"},
-  {"question": "試験の結果が___になった。", "choices": ["明らか", "確か", "明確", "はっきり"], "answerIndex": 3, "explanation": "「はっきりになる」= 확실해지다. 동사 앞에는 부사형 はっきり가 자연스러워요.", "category": "vocab"},
-  {"question": "電車が___して、会議に遅れてしまった。", "choices": ["遅延", "中止", "停止", "故障"], "answerIndex": 0, "explanation": "「遅延(ちえん)」= 지연. 교통수단의 지연을 나타내는 단어예요.", "category": "vocab"},
-  {"question": "彼は仕事に___を持っている。", "choices": ["自信", "自由", "自然", "自覚"], "answerIndex": 0, "explanation": "「自信(じしん)を持つ」= 자신감을 갖다. N3 빈출 고정 표현이에요.", "category": "vocab"},
-  {"question": "新しいプロジェクトを___することになった。", "choices": ["担当", "担任", "担保", "担架"], "answerIndex": 0, "explanation": "「担当(たんとう)する」= 담당하다. 업무/역할을 맡을 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "彼女の話は___があって、みんなが聞き入った。", "choices": ["説得力", "影響力", "実力", "能力"], "answerIndex": 0, "explanation": "「説得力(せっとくりょく)がある」= 설득력이 있다. 말의 힘을 표현할 때 써요.", "category": "vocab"},
-  {"question": "部長の___で、計画が変更された。", "choices": ["指示", "命令", "指導", "案内"], "answerIndex": 0, "explanation": "「指示(しじ)」= 지시. 윗사람이 내리는 업무 지시를 나타내요.", "category": "vocab"},
-  {"question": "彼は___な性格で、誰とでも仲良くなれる。", "choices": ["明るい", "優しい", "社交的", "積極的"], "answerIndex": 2, "explanation": "「社交的(しゃこうてき)」= 사교적. 누구와도 친해질 수 있다는 문맥에 맞아요.", "category": "vocab"},
-  {"question": "この映画は___が高く、多くの賞を受賞した。", "choices": ["評価", "評判", "人気", "反響"], "answerIndex": 0, "explanation": "「評価(ひょうか)が高い」= 평가가 높다. 작품/성과 평가를 말할 때 써요.", "category": "vocab"},
-  {"question": "彼女は英語が___で、通訳もできる。", "choices": ["得意", "上手", "優秀", "流暢"], "answerIndex": 0, "explanation": "「得意(とくい)」= 잘하다/자신 있다. 자신이 잘하는 것에는 得意를 써요.", "category": "vocab"},
-  {"question": "この地域では近年、人口が___している。", "choices": ["減少", "低下", "下落", "縮小"], "answerIndex": 0, "explanation": "「人口が減少(げんしょう)する」= 인구가 감소하다. 인구 변화의 가장 일반적 표현이에요.", "category": "vocab"},
-  {"question": "プロジェクトの___が遅れているため、残業が続いている。", "choices": ["進捗", "進行", "進展", "前進"], "answerIndex": 0, "explanation": "「進捗(しんちょく)が遅れる」= 진척이 늦어지다. 업무 진행 상황에서 자주 쓰여요.", "category": "vocab"},
-  {"question": "彼の___な発言がチームの雰囲気を悪くした。", "choices": ["無責任", "不注意", "無関心", "不誠実"], "answerIndex": 0, "explanation": "「無責任(むせきにん)な発言」= 무책임한 발언. 팀 분위기를 나쁘게 만든 원인으로 자연스러워요.", "category": "vocab"},
-  {"question": "彼女は___に仕事をこなすので、上司から信頼されている。", "choices": ["丁寧", "迅速", "正確", "効率的"], "answerIndex": 3, "explanation": "「効率的(こうりつてき)に仕事をこなす」= 효율적으로 일을 처리하다. 신뢰받는 이유로 적합해요.", "category": "vocab"},
-  {"question": "市場の___を調査してから、新製品を発売する。", "choices": ["動向", "状況", "傾向", "需要"], "answerIndex": 3, "explanation": "「需要(じゅよう)を調査する」= 수요를 조사하다. 신제품 발매 전에 확인하는 것이에요.", "category": "vocab"},
-  {"question": "この問題は___に解決できない。", "choices": ["簡単", "すぐ", "早速", "すぐに"], "answerIndex": 3, "explanation": "「すぐに解決できない」= 바로 해결할 수 없다. 부사 すぐに가 동사를 수식해요.", "category": "vocab"},
-  {"question": "彼の意見は___があり、会議で採用された。", "choices": ["合理性", "現実性", "説得力", "可能性"], "answerIndex": 2, "explanation": "「説得力がある」= 설득력이 있다. 회의에서 채택된 이유로 가장 어울려요.", "category": "vocab"},
-  {"question": "会議の資料を___として、議事録を作成した。", "choices": ["結果", "記録", "報告", "参考"], "answerIndex": 3, "explanation": "「参考(さんこう)として」= 참고로. 의사록 작성 시 자료를 활용하는 문맥에 맞아요.", "category": "vocab"},
-  {"question": "___の通り、今月の売上は減少しています。", "choices": ["グラフ", "データ", "資料", "結果"], "answerIndex": 0, "explanation": "「グラフの通り」= 그래프에서 보듯이. 수치를 시각적으로 보여줄 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "このレポートの___を三枚にまとめてください。", "choices": ["要点", "要約", "概要", "内容"], "answerIndex": 0, "explanation": "「要点(ようてん)をまとめる」= 요점을 정리하다. 핵심 내용을 압축할 때 써요.", "category": "vocab"},
-  {"question": "締め切りに___ように、急いで仕上げた。", "choices": ["間に合う", "合わせる", "追いつく", "届く"], "answerIndex": 0, "explanation": "「締め切りに間に合う(まにあう)」= 마감에 맞추다. 기한 내에 완성하는 표현이에요.", "category": "vocab"},
-  {"question": "彼女の___な笑顔が周りを明るくする。", "choices": ["元気", "明るい", "素直", "自然"], "answerIndex": 3, "explanation": "「自然(しぜん)な笑顔」= 자연스러운 미소. 주변을 밝게 만드는 미소의 모습으로 자연스러워요.", "category": "vocab"},
-  {"question": "その計画には___な点がいくつかある。", "choices": ["問題", "課題", "不満", "疑問"], "answerIndex": 1, "explanation": "「課題(かだい)な点」= 과제가 있는 점. 해결해야 할 문제를 부드럽게 표현할 때 써요.", "category": "vocab"},
-
-  # GRAMMAR 25개
-  {"question": "試験に合格する___、毎日勉強している。", "choices": ["ために", "ように", "ことに", "はずに"], "answerIndex": 0, "explanation": "「〜ために」= 〜을 위해. 의지적 목적에 써요. 「ように」는 가능/상태 목적에 써요.", "category": "grammar"},
-  {"question": "雨が降って___、試合は中止になった。", "choices": ["しまって", "いて", "おいて", "みて"], "answerIndex": 0, "explanation": "「〜てしまう」= 〜해버리다. 의도치 않은 결과나 유감스러운 상황을 나타내요.", "category": "grammar"},
-  {"question": "この仕事は私___できない。", "choices": ["しか", "だけ", "ばかり", "ほど"], "answerIndex": 0, "explanation": "「しか〜ない」= 〜밖에 없다. 「しか」는 반드시 부정형과 함께 써요.", "category": "grammar"},
-  {"question": "もっと早く出発___よかった。", "choices": ["すれば", "したら", "すると", "するなら"], "answerIndex": 0, "explanation": "「〜すればよかった」= 〜했으면 좋았을 텐데. 과거 후회를 나타내는 고정 표현이에요.", "category": "grammar"},
-  {"question": "先生に___、この問題が解けた。", "choices": ["教えてもらって", "教えてあげて", "教えてくれて", "教えておいて"], "answerIndex": 0, "explanation": "「〜てもらう」= 〜해 받다(내가 혜택 받는 입장). 선생님께 배운 덕분에 풀었어요.", "category": "grammar"},
-  {"question": "このレストランは値段が高い___、味はあまりよくない。", "choices": ["わりに", "ために", "くせに", "ものの"], "answerIndex": 0, "explanation": "「〜わりに」= 〜에 비해. 기대와 다른 결과. '비싼 것에 비해 맛이 없다'는 의미예요.", "category": "grammar"},
-  {"question": "彼は病気___、会社に来た。", "choices": ["なのに", "だから", "なので", "ために"], "answerIndex": 0, "explanation": "「〜なのに」= 〜인데도. 예상과 반대되는 결과에 대한 놀라움/불만을 나타내요.", "category": "grammar"},
-  {"question": "会議の資料を___おいてください。", "choices": ["準備して", "準備に", "準備を", "準備が"], "answerIndex": 0, "explanation": "「〜ておく」= 미리 〜해두다. 미래를 위해 준비해두는 행위를 나타내요.", "category": "grammar"},
-  {"question": "彼女は歌が上手な___、ダンスも得意だ。", "choices": ["うえに", "ほかに", "ために", "ものに"], "answerIndex": 0, "explanation": "「〜うえに」= 〜할 뿐만 아니라. 좋은 점을 덧붙일 때 써요.", "category": "grammar"},
-  {"question": "父は毎朝、新聞を読み___コーヒーを飲む。", "choices": ["ながら", "つつ", "てから", "つつも"], "answerIndex": 0, "explanation": "「〜ながら」= 〜하면서. 두 가지 동작을 동시에 할 때 가장 자연스러운 표현이에요.", "category": "grammar"},
-  {"question": "この問題は難しすぎて、私には___。", "choices": ["わかりません", "わかりかねます", "わかれません", "わかりえません"], "answerIndex": 1, "explanation": "「〜かねる」= 〜하기 어렵다. 공손하게 불가능함을 나타내는 공식 표현이에요.", "category": "grammar"},
-  {"question": "この薬は1日3回___なりません。", "choices": ["飲まなければ", "飲まないと", "飲まないで", "飲まずに"], "answerIndex": 0, "explanation": "「〜なければなりません」= 〜하지 않으면 안 됩니다. 의무/필수를 나타내는 핵심 표현이에요.", "category": "grammar"},
-  {"question": "このプロジェクトは来月___完成する予定です。", "choices": ["までに", "までは", "まで", "まででも"], "answerIndex": 0, "explanation": "「〜までに」= 〜까지(기한). 데드라인을 나타낼 때 써요. 「まで」는 '계속'의 의미예요.", "category": "grammar"},
-  {"question": "報告書を___、上司に送ってください。", "choices": ["書いてから", "書いてみて", "書いておいて", "書いてしまって"], "answerIndex": 0, "explanation": "「〜てから」= 〜하고 나서. 순서를 나타내요. '보고서 쓰고 나서 보내세요'.", "category": "grammar"},
-  {"question": "彼女の意見を___うえで、最終決定をした。", "choices": ["聞いた", "聞く", "聞いて", "聞き"], "answerIndex": 0, "explanation": "「〜たうえで」= 〜한 다음에. '의견을 들은 후에 최종 결정을 했다'는 표현이에요.", "category": "grammar"},
-  {"question": "来週の会議に___かどうか、まだわからない。", "choices": ["参加できる", "参加する", "参加した", "参加して"], "answerIndex": 0, "explanation": "「〜かどうかわからない」= 〜인지 아닌지 모르다. 불확실할 때는 できる형이 자연스러워요.", "category": "grammar"},
-  {"question": "患者の状態が悪化した___、すぐに医師に連絡した。", "choices": ["ため", "ので", "から", "のに"], "answerIndex": 0, "explanation": "「〜ため」= 〜때문에. 객관적 원인/이유. 공식 문서나 보고에서 자주 쓰여요.", "category": "grammar"},
-  {"question": "弊社の製品は品質が高い___、価格も手頃です。", "choices": ["うえに", "のに", "わりに", "ために"], "answerIndex": 0, "explanation": "「品質が高いうえに価格も手頃」= 품질 높은 데다가 가격도 합리적. 긍정 요소 추가할 때 써요.", "category": "grammar"},
-  {"question": "薬を飲んだ___、まだ熱が下がらない。", "choices": ["のに", "から", "ので", "けど"], "answerIndex": 0, "explanation": "「〜のに」= 〜인데도. 약을 먹었는데도 열이 안 내려간다는 불만/의외의 상황이에요.", "category": "grammar"},
-  {"question": "彼の説明を聞いて、ようやく___。", "choices": ["わかりました", "わかっています", "わかっていました", "わかります"], "answerIndex": 0, "explanation": "「ようやくわかった」= 드디어 알게 됐다. 「ようやく」는 어려운 과정 끝에 달성할 때 써요.", "category": "grammar"},
-  {"question": "この書類は明日___提出してください。", "choices": ["までに", "までは", "まで", "までも"], "answerIndex": 0, "explanation": "「明日までに提出」= 내일까지 제출. 제출 기한을 나타낼 때는 「までに」를 써요.", "category": "grammar"},
-  {"question": "この仕事は一人で___には無理だ。", "choices": ["やる", "やった", "やって", "やり"], "answerIndex": 0, "explanation": "「〜するには無理だ」= 〜하기엔 무리다. 동사 기본형 + には로 판단을 나타내요.", "category": "grammar"},
-  {"question": "電話___、すぐに知らせてください。", "choices": ["があったら", "があれば", "があって", "があると"], "answerIndex": 0, "explanation": "「〜があったら」= 〜가 있으면(가정). 조건부 요청을 나타낼 때 「たら」형이 자연스러워요.", "category": "grammar"},
-  {"question": "新薬の効果については、さらに___必要がある。", "choices": ["研究する", "研究した", "研究して", "研究しない"], "answerIndex": 0, "explanation": "「さらに研究する必要がある」= 더 연구할 필요가 있다. 「必要がある」앞엔 동사 기본형이 와요.", "category": "grammar"},
-  {"question": "この映画は見る___ない。", "choices": ["価値が", "必要が", "理由が", "意味が"], "answerIndex": 0, "explanation": "「見る価値がない」= 볼 가치가 없다. 「価値がない」는 가치 판단 표현이에요.", "category": "grammar"},
-
-  # ===== 추가 VOCAB 40개 =====
-  {"question": "友達と___が合わなくて、待ち合わせに失敗した。", "choices": ["時間", "時刻", "タイミング", "スケジュール"], "answerIndex": 2, "explanation": "「タイミングが合わない」= 타이밍이 안 맞다. 약속 시간이 엇갈릴 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "彼女は毎日日記を___習慣がある。", "choices": ["書く", "つける", "記す", "残す"], "answerIndex": 1, "explanation": "「日記をつける」= 일기를 쓰다. 日記는 書く도 되지만 「つける」가 가장 자연스러운 고정 표현이에요.", "category": "vocab"},
-  {"question": "急いでいたので、財布を家に___きてしまった。", "choices": ["置いて", "忘れて", "残して", "落として"], "answerIndex": 1, "explanation": "「忘れてくる」= 두고 오다/잊고 오다. 집에 두고 온 상황에는 忘れる가 자연스러워요.", "category": "vocab"},
-  {"question": "彼は約束を___ことが多くて、信頼されていない。", "choices": ["壊す", "破る", "消す", "やめる"], "answerIndex": 1, "explanation": "「約束を破る(やぶる)」= 약속을 어기다. 약속에는 반드시 破る를 써요. N3 필수 표현이에요.", "category": "vocab"},
-  {"question": "最近、体の___が悪くて、病院に行った。", "choices": ["状態", "様子", "具合", "調子"], "answerIndex": 3, "explanation": "「体の調子(ちょうし)が悪い」= 몸 상태가 나쁘다. 건강 상태에는 調子가 가장 자연스러워요.", "category": "vocab"},
-  {"question": "彼女の___な説明のおかげで、よく理解できた。", "choices": ["丁寧", "詳しい", "細かい", "具体的"], "answerIndex": 3, "explanation": "「具体的(ぐたいてき)な説明」= 구체적인 설명. 이해를 돕는 설명의 특징으로 가장 적합해요.", "category": "vocab"},
-  {"question": "彼はすぐに___を立てて、行動する人だ。", "choices": ["計画", "目標", "方針", "予定"], "answerIndex": 0, "explanation": "「計画(けいかく)を立てる」= 계획을 세우다. 「立てる」와 함께 쓰는 고정 표현이에요.", "category": "vocab"},
-  {"question": "この問題について、先生に___を求めた。", "choices": ["答え", "意見", "アドバイス", "助言"], "answerIndex": 3, "explanation": "「助言(じょげん)を求める」= 조언을 구하다. 윗사람에게 의견을 구할 때 쓰는 격식체 표현이에요.", "category": "vocab"},
-  {"question": "彼は失敗を___に、次は成功した。", "choices": ["経験", "参考", "教訓", "材料"], "answerIndex": 2, "explanation": "「失敗を教訓(きょうくん)に」= 실패를 교훈 삼아. 실패에서 배우는 표현으로 자주 쓰여요.", "category": "vocab"},
-  {"question": "会議で自分の___をはっきり述べることが大切だ。", "choices": ["考え", "意見", "気持ち", "立場"], "answerIndex": 1, "explanation": "「意見(いけん)を述べる」= 의견을 말하다. 회의 등 공식 상황에서 자신의 생각을 나타낼 때 써요.", "category": "vocab"},
-  {"question": "彼女は困っている人を見ると、___に手伝おうとする。", "choices": ["すぐ", "必ず", "自然と", "わざと"], "answerIndex": 2, "explanation": "「自然と(しぜんと)〜する」= 자연스럽게 〜하다. 의식하지 않고 저절로 행동하는 뉘앙스예요.", "category": "vocab"},
-  {"question": "その話を聞いて、思わず___が出た。", "choices": ["笑い", "涙", "声", "言葉"], "answerIndex": 1, "explanation": "「涙(なみだ)が出る」= 눈물이 나다. 「思わず涙が出た」= 나도 모르게 눈물이 났다. 자주 출제되는 표현이에요.", "category": "vocab"},
-  {"question": "彼女とは___が合って、すぐ友達になった。", "choices": ["気", "心", "性格", "趣味"], "answerIndex": 0, "explanation": "「気が合う(きがあう)」= 마음이 맞다/잘 통하다. 고정 표현으로 N3 빈출이에요.", "category": "vocab"},
-  {"question": "長年の夢が___、とても嬉しかった。", "choices": ["かなって", "実現して", "達成して", "成功して"], "answerIndex": 0, "explanation": "「夢がかなう」= 꿈이 이루어지다. 「夢」에는 かなう를 쓰는 것이 가장 자연스러운 고정 표현이에요.", "category": "vocab"},
-  {"question": "このカフェは___がよくて、よく来る。", "choices": ["雰囲気", "環境", "様子", "状況"], "answerIndex": 0, "explanation": "「雰囲気(ふんいき)がいい」= 분위기가 좋다. 장소의 느낌을 표현할 때 雰囲気를 써요.", "category": "vocab"},
-  {"question": "彼は___を持って仕事に取り組んでいる。", "choices": ["責任感", "自信", "やる気", "情熱"], "answerIndex": 2, "explanation": "「やる気を持って」= 의욕을 가지고. 일에 적극적으로 임하는 모습을 나타낼 때 써요.", "category": "vocab"},
-  {"question": "子供のころの___が今も忘れられない。", "choices": ["記憶", "思い出", "経験", "印象"], "answerIndex": 1, "explanation": "「思い出(おもいで)」= 추억. 과거의 즐거운 기억을 나타낼 때는 思い出를 써요.", "category": "vocab"},
-  {"question": "彼女は___がよく、何でも覚えられる。", "choices": ["頭", "記憶力", "才能", "能力"], "answerIndex": 1, "explanation": "「記憶力(きおくりょく)がいい」= 기억력이 좋다. 무엇이든 기억한다는 능력을 직접 나타내요.", "category": "vocab"},
-  {"question": "このニュースは社会に大きな___を与えた。", "choices": ["影響", "効果", "変化", "刺激"], "answerIndex": 0, "explanation": "「影響(えいきょう)を与える」= 영향을 주다. 사회적 파급력을 나타낼 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "夜中に___が聞こえて、目が覚めた。", "choices": ["音", "声", "騒音", "物音"], "answerIndex": 3, "explanation": "「物音(ものおと)」= 물건 소리/인기척. 밤중에 들리는 정체 모를 소리에 가장 자연스러운 단어예요.", "category": "vocab"},
-  {"question": "彼の態度が___で、周りが困っている。", "choices": ["わがまま", "自己中心的", "無責任", "不誠実"], "answerIndex": 0, "explanation": "「わがまま」= 제멋대로/이기적. 주변 사람들이 곤란해하는 태도로 가장 자연스러운 단어예요.", "category": "vocab"},
-  {"question": "この小説は読み___があって、一気に読んだ。", "choices": ["応え", "甲斐", "価値", "がい"], "answerIndex": 0, "explanation": "「読み応え(よみごたえ)がある」= 읽는 보람이 있다. 내용이 충실해서 읽는 만족감이 있다는 표현이에요.", "category": "vocab"},
-  {"question": "彼は人の___をよく読める人だ。", "choices": ["気持ち", "心理", "気配", "感情"], "answerIndex": 0, "explanation": "「気持ちを読む(よむ)」= 마음을 읽다. 상대방의 감정을 파악한다는 표현으로 자주 쓰여요.", "category": "vocab"},
-  {"question": "試験前に___を繰り返すことが大切だ。", "choices": ["勉強", "練習", "復習", "予習"], "answerIndex": 2, "explanation": "「復習(ふくしゅう)を繰り返す」= 복습을 반복하다. 시험 전 학습 방법으로 가장 자연스러워요.", "category": "vocab"},
-  {"question": "彼女は誰に対しても___な態度で接する。", "choices": ["公平", "平等", "対等", "公正"], "answerIndex": 0, "explanation": "「公平(こうへい)な態度」= 공평한 태도. 누구에게나 편견 없이 대하는 모습을 나타내요.", "category": "vocab"},
-  {"question": "彼は自分のミスを素直に___した。", "choices": ["謝罪", "反省", "認める", "告白"], "answerIndex": 1, "explanation": "「反省(はんせい)する」= 반성하다. 자신의 실수를 솔직하게 인정하고 돌아보는 행위예요.", "category": "vocab"},
-  {"question": "このアイデアは___性が高いと思う。", "choices": ["可能", "実現", "成功", "有効"], "answerIndex": 0, "explanation": "「可能性(かのうせい)が高い」= 가능성이 높다. 아이디어의 실현 여부를 말할 때 써요.", "category": "vocab"},
-  {"question": "彼はどんな状況でも___を失わない人だ。", "choices": ["冷静さ", "自信", "余裕", "落ち着き"], "answerIndex": 0, "explanation": "「冷静さ(れいせいさ)を失わない」= 냉정함을 잃지 않다. 어떤 상황에서도 침착한 사람을 묘사해요.", "category": "vocab"},
-  {"question": "彼女は___を大切にしていて、毎日感謝している。", "choices": ["人間関係", "友情", "絆", "縁"], "answerIndex": 2, "explanation": "「絆(きずな)を大切にする」= 유대를 소중히 하다. 사람들과의 깊은 연결을 나타내요.", "category": "vocab"},
-  {"question": "彼の話は___があって、聞いていて飽きない。", "choices": ["面白さ", "魅力", "興味", "深み"], "answerIndex": 1, "explanation": "「魅力(みりょく)がある」= 매력이 있다. 이야기가 흥미롭고 듣는 이를 끌어당기는 표현이에요.", "category": "vocab"},
-  {"question": "この計画には___な準備が必要だ。", "choices": ["十分", "完璧", "徹底的", "丁寧"], "answerIndex": 2, "explanation": "「徹底的(てっていてき)な準備」= 철저한 준비. 빈틈없는 준비를 강조할 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "彼は___に物事を考えるタイプだ。", "choices": ["論理的", "合理的", "理論的", "科学的"], "answerIndex": 0, "explanation": "「論理的(ろんりてき)に考える」= 논리적으로 생각하다. 사고방식을 묘사할 때 가장 자주 쓰여요.", "category": "vocab"},
-  {"question": "彼女は___が強くて、何があっても諦めない。", "choices": ["意志", "根性", "精神力", "忍耐力"], "answerIndex": 0, "explanation": "「意志(いし)が強い」= 의지가 강하다. 포기하지 않는 성격을 묘사하는 표현이에요.", "category": "vocab"},
-  {"question": "子供の___を見守ることが親の役目だ。", "choices": ["成長", "発展", "発達", "進歩"], "answerIndex": 0, "explanation": "「子供の成長(せいちょう)を見守る」= 아이의 성장을 지켜보다. 人に対して는 成長을 쓰는 것이 자연스러워요.", "category": "vocab"},
-  {"question": "彼女は自分の___を信じて行動した。", "choices": ["直感", "勘", "感覚", "感性"], "answerIndex": 0, "explanation": "「直感(ちょっかん)を信じる」= 직감을 믿다. 이성적 판단 없이 느낌으로 행동할 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "この映画には深い___がある。", "choices": ["意味", "意図", "内容", "メッセージ"], "answerIndex": 3, "explanation": "「深いメッセージがある」= 깊은 메시지가 있다. 영화나 작품의 주제/전달 내용을 나타낼 때 써요.", "category": "vocab"},
-  {"question": "彼は___をかけて、その問題に取り組んだ。", "choices": ["時間", "情熱", "力", "命"], "answerIndex": 1, "explanation": "「情熱(じょうねつ)をかける」= 열정을 쏟다. 전력을 다해 임하는 모습을 나타내요.", "category": "vocab"},
-  {"question": "長い___の末、ついに答えが見つかった。", "choices": ["時間", "努力", "苦労", "研究"], "answerIndex": 2, "explanation": "「苦労(くろう)の末」= 고생 끝에. 긴 노력과 고생 후 결과를 얻었을 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "彼女は何事も___に取り組む姿勢が評価されている。", "choices": ["真剣", "真面目", "積極的", "誠実"], "answerIndex": 1, "explanation": "「真面目(まじめ)に取り組む」= 성실하게 임하다. 꾸준하고 성실한 태도를 나타내는 표현이에요.", "category": "vocab"},
-  {"question": "この仕事には___な経験が必要だ。", "choices": ["豊富", "十分", "幅広い", "深い"], "answerIndex": 0, "explanation": "「豊富(ほうふ)な経験」= 풍부한 경험. 경험의 양이 많음을 나타낼 때 쓰는 표현이에요.", "category": "vocab"},
-  {"question": "彼は自分の___を素直に表現できる人だ。", "choices": ["感情", "気持ち", "思い", "心"], "answerIndex": 0, "explanation": "「感情(かんじょう)を表現する」= 감정을 표현하다. 자신의 느낌을 겉으로 나타내는 표현이에요.", "category": "vocab"},
-
-  # ===== 추가 GRAMMAR 40개 =====
-  {"question": "彼女が来る___、部屋を片付けておこう。", "choices": ["前に", "までに", "のに", "ために"], "answerIndex": 0, "explanation": "「〜前に」= 〜하기 전에. 그녀가 오기 전에 방을 정리해두자는 의미예요.", "category": "grammar"},
-  {"question": "日本語が___ように、毎日練習している。", "choices": ["話せる", "話す", "話した", "話せた"], "answerIndex": 0, "explanation": "「〜ように」= 〜할 수 있도록. 능력/상태 변화를 목표로 할 때는 가능형 + ように를 써요.", "category": "grammar"},
-  {"question": "彼女は泣き___笑い___した。", "choices": ["ながら", "つつ", "たり〜たり", "て〜て"], "answerIndex": 2, "explanation": "「〜たり〜たりする」= 〜하기도 하고 〜하기도 하다. 두 가지 동작을 번갈아 할 때 써요.", "category": "grammar"},
-  {"question": "もし雨が降る___、試合は中止になる。", "choices": ["なら", "と", "たら", "ば"], "answerIndex": 1, "explanation": "「〜と」= (조건) 〜하면. 자연현상/규칙적 결과를 나타낼 때 써요. 비가 오면 자동으로 취소되는 규칙이에요.", "category": "grammar"},
-  {"question": "先週から風邪を___いる。", "choices": ["ひいて", "ひき", "ひいた", "ひく"], "answerIndex": 0, "explanation": "「風邪をひいている」= 감기에 걸려 있다. 상태가 계속되고 있음을 「〜ている」로 나타내요.", "category": "grammar"},
-  {"question": "この本は___読めば読む___面白くなる。", "choices": ["ほど〜ほど", "だけ〜だけ", "ば〜ほど", "たら〜ほど"], "answerIndex": 2, "explanation": "「〜ば〜ほど」= 〜하면 할수록. '읽으면 읽을수록 재밌어진다'는 의미예요.", "category": "grammar"},
-  {"question": "彼に___もらえませんか。", "choices": ["手伝って", "手伝い", "手伝う", "手伝い方"], "answerIndex": 0, "explanation": "「〜てもらえませんか」= 〜해 주실 수 있나요? 상대에게 정중하게 부탁할 때 쓰는 표현이에요.", "category": "grammar"},
-  {"question": "このことは誰にも言わない___している。", "choices": ["ことに", "ように", "つもりに", "はずに"], "answerIndex": 0, "explanation": "「〜ないことにする」= 〜하지 않기로 하다. 스스로 결정한 사항을 나타내는 표현이에요.", "category": "grammar"},
-  {"question": "彼女は医者に___と言われた。", "choices": ["休む", "休め", "休もう", "休んで"], "answerIndex": 0, "explanation": "「〜と言われた」= 〜라고 들었다. 전달 내용에는 기본형 또는 보통체를 써요.", "category": "grammar"},
-  {"question": "試験が終わった___遊ぼう。", "choices": ["あとで", "てから", "ら", "なら"], "answerIndex": 0, "explanation": "「〜あとで」= 〜한 후에. 「てから」와 비슷하지만 시간적 여유가 있는 뉘앙스예요.", "category": "grammar"},
-  {"question": "彼はお金が___くせに、いつもおごってくれない。", "choices": ["ある", "あった", "あって", "あり"], "answerIndex": 0, "explanation": "「〜くせに」= 〜인데도(비난 뉘앙스). 돈이 있음에도 사주지 않는다는 불만을 담아요.", "category": "grammar"},
-  {"question": "この映画は子供___楽しめる。", "choices": ["でも", "だけ", "しか", "ほど"], "answerIndex": 0, "explanation": "「子供でも楽しめる」= 어린이도 즐길 수 있다. 「でも」= 〜조차도/〜도. 최소 기준을 나타내요.", "category": "grammar"},
-  {"question": "急いで___のに、財布を忘れた。", "choices": ["きた", "いた", "みた", "おいた"], "answerIndex": 0, "explanation": "「急いできたのに」= 서둘러 왔는데. 「〜てくる」= 〜해 오다. 이쪽 방향으로 이동하며 행동한 것을 나타내요.", "category": "grammar"},
-  {"question": "その話を聞いて、驚かずには___。", "choices": ["いられなかった", "いられた", "いなかった", "いられる"], "answerIndex": 0, "explanation": "「〜ずにはいられない」= 〜하지 않을 수 없다. 감정이 억제되지 않는 표현이에요.", "category": "grammar"},
-  {"question": "彼は約束の時間に___はずなのに、まだ来ない。", "choices": ["来る", "来た", "来て", "来ている"], "answerIndex": 0, "explanation": "「〜はずなのに」= 〜일 텐데도. 당연히 와야 하는데 오지 않는 상황의 의외감을 나타내요.", "category": "grammar"},
-  {"question": "このレポートは明日___です。", "choices": ["提出のはず", "提出するはず", "提出のつもり", "提出する予定"], "answerIndex": 3, "explanation": "「〜する予定です」= 〜할 예정입니다. 확정된 계획을 정중히 나타내는 표현이에요.", "category": "grammar"},
-  {"question": "彼女は___らしく、いつも周りに気を配っている。", "choices": ["女性", "リーダー", "先輩", "大人"], "answerIndex": 3, "explanation": "「大人(おとな)らしく」= 어른답게. 「〜らしい」= 〜답다. 그 특성에 맞는 행동을 나타내요.", "category": "grammar"},
-  {"question": "彼は忙しい___、いつも笑顔でいる。", "choices": ["ものの", "のに", "くせに", "にもかかわらず"], "answerIndex": 0, "explanation": "「〜ものの」= 〜이긴 하지만. 바쁘긴 하지만 항상 웃는 얼굴이라는 양보를 나타내요.", "category": "grammar"},
-  {"question": "その問題は簡単___、意外と難しかった。", "choices": ["そうだったのに", "かと思ったら", "と思ったから", "に見えたので"], "answerIndex": 1, "explanation": "「〜かと思ったら」= 〜인가 했더니. 예상과 다른 결과에 대한 놀라움을 나타내요.", "category": "grammar"},
-  {"question": "彼女の話によると、来月結婚する___だ。", "choices": ["らしい", "そうだ", "ようだ", "はずだ"], "answerIndex": 0, "explanation": "「〜によると〜らしい」= 〜에 따르면 〜인 것 같다. 전문 정보를 근거로 한 추측이에요.", "category": "grammar"},
-  {"question": "彼は一度決めた___、絶対に変えない。", "choices": ["ことは", "こと", "ことを", "ことが"], "answerIndex": 0, "explanation": "「〜ことは変えない」= 한번 결정한 것은 바꾸지 않는다. 「こと」가 결정 내용을 명사화해요.", "category": "grammar"},
-  {"question": "食事の___、手を洗うようにしている。", "choices": ["前に", "後で", "最中に", "間に"], "answerIndex": 0, "explanation": "「食事の前に手を洗う」= 식사 전에 손을 씻다. 위생 습관으로 가장 자연스러운 표현이에요.", "category": "grammar"},
-  {"question": "このドラマは___見れば見る___はまる。", "choices": ["見れば〜ほど", "見ると〜ほど", "見て〜ほど", "見た〜ほど"], "answerIndex": 0, "explanation": "「見れば見るほど」= 볼수록. 「〜ば〜ほど」패턴이에요. 동사 가정형 + 기본형 + ほど예요.", "category": "grammar"},
-  {"question": "彼女に相談___、気持ちが楽になった。", "choices": ["したら", "すると", "すれば", "してから"], "answerIndex": 0, "explanation": "「〜したら〜なった」= 〜했더니 〜됐다. 어떤 행동 후의 결과를 나타낼 때 たら를 써요.", "category": "grammar"},
-  {"question": "この問題は私___解決できない。", "choices": ["だけが", "しか", "だけでは", "のみ"], "answerIndex": 2, "explanation": "「私だけでは解決できない」= 나 혼자서는 해결할 수 없다. 「だけでは」= 〜만으로는(불충분).", "category": "grammar"},
-  {"question": "彼は仕事が終わる___すぐ帰る。", "choices": ["と", "たら", "ば", "なら"], "answerIndex": 0, "explanation": "「〜と」= 〜하면(즉시). 일이 끝나면 바로 귀가하는 습관적 행동에 「と」가 자연스러워요.", "category": "grammar"},
-  {"question": "A:「手伝いましょうか。」B:「___ください。」", "choices": ["お願いして", "お願いし", "お願いして頂けますか", "お願いします"], "answerIndex": 3, "explanation": "「お願いします」= 부탁드립니다. 도움 제의에 수락할 때 가장 자연스럽고 정중한 표현이에요.", "category": "grammar"},
-  {"question": "試験に合格___かどうかは、努力次第だ。", "choices": ["できる", "できた", "できる", "できて"], "answerIndex": 0, "explanation": "「〜できるかどうか」= 〜할 수 있는지 없는지. 가능 여부를 나타내는 표현이에요.", "category": "grammar"},
-  {"question": "彼は疲れて___のか、ソファで眠っていた。", "choices": ["いた", "いる", "いた", "あった"], "answerIndex": 0, "explanation": "「疲れていたのか」= 피곤했던 것인지. 「〜ていた」는 과거의 지속적 상태를 나타내요.", "category": "grammar"},
-  {"question": "先生に褒めて___、とても嬉しかった。", "choices": ["もらって", "あげて", "くれて", "いただいて"], "answerIndex": 3, "explanation": "「〜ていただく」= 〜해 주시다(받다). 선생님께 칭찬을 받은 상황에서는 いただく가 경어로 적절해요.", "category": "grammar"},
-  {"question": "この仕事は経験が___ほど、うまくなる。", "choices": ["ある", "あった", "あれば", "あって"], "answerIndex": 2, "explanation": "「経験があればあるほど」= 경험이 있으면 있을수록. 「〜ば〜ほど」패턴이에요.", "category": "grammar"},
-  {"question": "彼女は___ところ、急に電話が鳴った。", "choices": ["寝ている", "寝ていた", "寝ようとしている", "寝ようとした"], "answerIndex": 2, "explanation": "「〜ようとしているところ」= 막 〜하려는 참에. 어떤 행동을 하려는 순간에 다른 일이 생겼을 때 써요.", "category": "grammar"},
-  {"question": "彼は怒って___ものの、すぐ機嫌が直った。", "choices": ["いた", "いる", "あった", "いたり"], "answerIndex": 0, "explanation": "「〜ていたものの」= 〜했긴 했지만. 화가 났긴 했지만 바로 풀렸다는 양보예요.", "category": "grammar"},
-  {"question": "仕事が終わり___、映画を見に行こう。", "choices": ["次第", "たら", "てから", "たあとで"], "answerIndex": 0, "explanation": "「〜次第(しだい)」= 〜하는 대로 즉시. 일이 끝나는 즉시 영화를 보러 가자는 의미예요.", "category": "grammar"},
-  {"question": "こんなに難しいとは___なかった。", "choices": ["思わ", "知ら", "考え", "わから"], "answerIndex": 0, "explanation": "「〜とは思わなかった」= 〜일 줄 몰랐다. 예상 밖의 상황에 대한 놀라움을 나타내요.", "category": "grammar"},
-  {"question": "彼女は泣いている___、笑顔を見せた。", "choices": ["にもかかわらず", "ものの", "のに", "くせに"], "answerIndex": 0, "explanation": "「〜にもかかわらず」= 〜임에도 불구하고. 울고 있음에도 불구하고 미소를 보인 역접이에요.", "category": "grammar"},
-  {"question": "あの映画は見た___がある。", "choices": ["こと", "もの", "はず", "わけ"], "answerIndex": 0, "explanation": "「〜たことがある」= 〜한 적이 있다. 과거 경험을 나타내는 N4~N3 핵심 표현이에요.", "category": "grammar"},
-  {"question": "田中さんは今日来ない___だ。", "choices": ["はず", "らしい", "ようだ", "そうだ"], "answerIndex": 0, "explanation": "「〜はずだ」= 〜일 것이다(근거 있는 추측). 스케줄 등 확실한 근거가 있는 예상이에요.", "category": "grammar"},
-  {"question": "彼女の言葉に傷つかない___がない。", "choices": ["わけ", "はず", "こと", "もの"], "answerIndex": 0, "explanation": "「〜ないわけがない」= 〜하지 않을 리가 없다. 당연히 상처받는다는 강한 긍정을 나타내요.", "category": "grammar"},
-  {"question": "会議は3時に始まる___になっている。", "choices": ["こと", "はず", "よう", "もの"], "answerIndex": 0, "explanation": "「〜ことになっている」= 〜하게 되어 있다. 규칙/결정된 사항을 나타내는 표현이에요.", "category": "grammar"},
-  {"question": "彼は優しい___、時々厳しいことも言う。", "choices": ["反面", "ものの", "くせに", "わりに"], "answerIndex": 0, "explanation": "「〜反面(はんめん)」= 〜한 반면. 한 사람의 상반되는 두 면을 대비할 때 써요.", "category": "grammar"},
+[
+  {
+    "question": "この仕事は思ったより___がかかった。",
+    "choices": ["お金", "時間", "手間", "気持ち"],
+    "answerIndex": 1,
+    "explanation": "「時間がかかる」= 시간이 걸리다. 자주 출제되는 고정 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女はいつも___な態度で人と話す。",
+    "choices": ["丁寧", "親切", "素直", "元気"],
+    "answerIndex": 0,
+    "explanation": "「丁寧(ていねい)な態度」= 정중한 태도. 말하는 방식에 어울리는 단어예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この店のケーキは___がいい。",
+    "choices": ["評判", "人気", "印象", "評価"],
+    "answerIndex": 1,
+    "explanation": "「人気(にんき)がいい」= 인기가 좋다. 사람들에게 인기 있는 상태를 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "試験の結果が___になった。",
+    "choices": ["明らか", "確か", "明確", "はっきり"],
+    "answerIndex": 3,
+    "explanation": "「はっきりになる」= 확실해지다. 동사 앞에는 부사형 はっきり가 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "電車が___して、会議に遅れてしまった。",
+    "choices": ["遅延", "中止", "停止", "故障"],
+    "answerIndex": 0,
+    "explanation": "「遅延(ちえん)」= 지연. 교통수단의 지연을 나타내는 단어예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は仕事に___を持っている。",
+    "choices": ["自信", "自由", "自然", "自覚"],
+    "answerIndex": 0,
+    "explanation": "「自信(じしん)を持つ」= 자신감을 갖다. N3 빈출 고정 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "新しいプロジェクトを___することになった。",
+    "choices": ["担当", "担任", "担保", "担架"],
+    "answerIndex": 0,
+    "explanation": "「担当(たんとう)する」= 담당하다. 업무/역할을 맡을 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女の話は___があって、みんなが聞き入った。",
+    "choices": ["説得力", "影響力", "実力", "能力"],
+    "answerIndex": 0,
+    "explanation": "「説得力(せっとくりょく)がある」= 설득력이 있다. 말의 힘을 표현할 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "部長の___で、計画が変更された。",
+    "choices": ["指示", "命令", "指導", "案内"],
+    "answerIndex": 0,
+    "explanation": "「指示(しじ)」= 지시. 윗사람이 내리는 업무 지시를 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は___な性格で、誰とでも仲良くなれる。",
+    "choices": ["明るい", "優しい", "社交的", "積極的"],
+    "answerIndex": 2,
+    "explanation": "「社交的(しゃこうてき)」= 사교적. 누구와도 친해질 수 있다는 문맥에 맞아요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この映画は___が高く、多くの賞を受賞した。",
+    "choices": ["評価", "評判", "人気", "反響"],
+    "answerIndex": 0,
+    "explanation": "「評価(ひょうか)が高い」= 평가가 높다. 작품/성과 평가를 말할 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は英語が___で、通訳もできる。",
+    "choices": ["得意", "上手", "優秀", "流暢"],
+    "answerIndex": 0,
+    "explanation": "「得意(とくい)」= 잘하다/자신 있다. 자신이 잘하는 것에는 得意를 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この地域では近年、人口が___している。",
+    "choices": ["減少", "低下", "下落", "縮小"],
+    "answerIndex": 0,
+    "explanation": "「人口が減少(げんしょう)する」= 인구가 감소하다. 인구 변화의 가장 일반적 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "プロジェクトの___が遅れているため、残業が続いている。",
+    "choices": ["進捗", "進行", "進展", "前進"],
+    "answerIndex": 0,
+    "explanation": "「進捗(しんちょく)가 늦어지다」= 진척이 늦어지다. 업무 진행 상황에서 자주 쓰여요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼の___な発言がチームの雰囲気を悪くした。",
+    "choices": ["無責任", "不注意", "無関心", "不誠実"],
+    "answerIndex": 0,
+    "explanation": "「無責任(むせきにん)な発言」= 무책임한 발언. 팀 분위기를 나쁘게 만든 원인으로 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は___に仕事をこなすので、上司から信頼されている。",
+    "choices": ["丁寧", "迅速", "正確", "効率的"],
+    "answerIndex": 3,
+    "explanation": "「効率的(こうりつてき)に仕事をこなす」= 효율적으로 일을 처리하다. 신뢰받는 이유로 적합해요.",
+    "category": "vocab"
+  },
+  {
+    "question": "市場の___を調査してから、新製品を発売する。",
+    "choices": ["動向", "状況", "傾向", "需要"],
+    "answerIndex": 3,
+    "explanation": "「順要(じゅよう)を調査する」= 수요를 조사하다. 신제품 발매 전에 확인하는 것이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この問題は___に解決できない。",
+    "choices": ["簡単", "すぐ", "早速", "すぐに"],
+    "answerIndex": 3,
+    "explanation": "「すぐに解決できない」= 바로 해결할 수 없다. 부사 すぐに가 동사를 수식해요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼の意見は___があり、会議で採用された。",
+    "choices": ["合理性", "現実性", "説得力", "可能性"],
+    "answerIndex": 2,
+    "explanation": "「説得力がある」= 설득력이 있다. 회의에서 채택된 이유로 가장 어울려요.",
+    "category": "vocab"
+  },
+  {
+    "question": "会議の資料を___として、議事録を作成した。",
+    "choices": ["結果", "記録", "報告", "参考"],
+    "answerIndex": 3,
+    "explanation": "「参考(さんこう)として」= 참고로. 의사록 작성 시 자료를 활용하는 문맥에 맞아요.",
+    "category": "vocab"
+  },
+  {
+    "question": "___の通り、今月の売上は減少しています。",
+    "choices": ["グラフ", "データ", "資料", "結果"],
+    "answerIndex": 0,
+    "explanation": "「グラフの通り」= 그래프에서 보듯이. 수치를 시각적으로 보여줄 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "このレポートの___を三枚にまとめてください。",
+    "choices": ["要点", "要約", "概要", "内容"],
+    "answerIndex": 0,
+    "explanation": "「要点(ようてん)をまとめる」= 요점을 정리하다. 핵심 내용을 압축할 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "締め切りに___ように、急いで仕上げた。",
+    "choices": ["間に合う", "合わせる", "追いつく", "届く"],
+    "answerIndex": 0,
+    "explanation": "「締め切りに間に合う(まにあう)」= 마감에 맞추다. 기한 내에 완성하는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女の___な笑顔が周りを明るくする。",
+    "choices": ["元気", "明るい", "素直", "自然"],
+    "answerIndex": 3,
+    "explanation": "「自然(しぜん)な笑顔」= 자연스러운 미소. 주변을 밝게 만드는 미소의 모습으로 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "その計画には___な点がいくつかある。",
+    "choices": ["問題", "課題", "不満", "疑問"],
+    "answerIndex": 1,
+    "explanation": "「課題(かだい)な点」= 과제가 있는 점. 해결해야 할 문제를 부드럽게 표현할 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "試験に合格する___、毎日勉強している。",
+    "choices": ["ために", "ように", "ことに", "はずに"],
+    "answerIndex": 0,
+    "explanation": "「〜ために」= 〜을 위해. 의지적 목적에 써요. 「ように」는 가능/상태 목적에 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "雨が降って___、試合は中止になった。",
+    "choices": ["しまって", "いて", "おいて", "みて"],
+    "answerIndex": 0,
+    "explanation": "「〜てしまう」= 〜해버리다. 의도치 않은 결과나 유감스러운 상황을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この仕事は私___できない。",
+    "choices": ["しか", "だけ", "ばかり", "ほど"],
+    "answerIndex": 0,
+    "explanation": "「しか〜ない」= 〜밖에 없다. 「しか」는 반드시 부정형과 함께 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "もっと早く出発___よかった。",
+    "choices": ["すれば", "したら", "すると", "するなら"],
+    "answerIndex": 0,
+    "explanation": "「〜すればよかった」= 〜했으면 좋았을 텐데. 과거 후회를 나타내는 고정 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "先生に___、この問題が解けた。",
+    "choices": ["教えてもらって", "教えてあげて", "教えてくれて", "教えておいて"],
+    "answerIndex": 0,
+    "explanation": "「〜てもらう」= 〜해 받다(내가 혜택 받는 입장). 선생님께 배운 덕분에 풀었어요.",
+    "category": "grammar"
+  },
+  {
+    "question": "このレストランは値段が高い___、味はあまりよくない。",
+    "choices": ["わりに", "ために", "くせに", "ものの"],
+    "answerIndex": 0,
+    "explanation": "「〜わりに」= 〜에 비해. 기대와 다른 결과. '비싼 것에 비해 맛이 없다'는 의미예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は病気___、会社に来た。",
+    "choices": ["なのに", "だから", "なので", "ために"],
+    "answerIndex": 0,
+    "explanation": "「〜なのに」= 〜인데도. 예상과 반대되는 결과에 대한 놀라움/불만을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "会議の資料を___おいてください。",
+    "choices": ["準備して", "準備に", "準備を", "準備が"],
+    "answerIndex": 0,
+    "explanation": "「〜ておく」= 미리 〜해두다. 미래를 위해 준비해두는 행위를 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は歌が上手な___、ダンスも得意だ。",
+    "choices": ["うえに", "ほかに", "ために", "ものに"],
+    "answerIndex": 0,
+    "explanation": "「〜うえに」= 〜할 뿐만 아니라. 좋은 점을 덧붙일 때 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "父は毎朝、新聞を読み___コーヒーを飲む。",
+    "choices": ["ながら", "つつ", "てから", "つつも"],
+    "answerIndex": 0,
+    "explanation": "「〜ながら」= 〜하면서. 두 가지 동작을 동시에 할 때 가장 자연스러운 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この問題は難しすぎて、私には___。",
+    "choices": ["わかりません", "わかりかねます", "わかれません", "わかりえません"],
+    "answerIndex": 1,
+    "explanation": "「〜かねる」= 〜하기 어렵다. 공손하게 불가능함을 나타내는 공식 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この薬は1日3回___なりません。",
+    "choices": ["飲まなければ", "飲まないと", "飲まないで", "飲まずに"],
+    "answerIndex": 0,
+    "explanation": "「〜なければなりません」= 〜하지 않으면 안 됩니다. 의무/필수를 나타내는 핵심 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "このプロジェクトは来月___完成하는 예정입니다.",
+    "choices": ["までに", "までは", "まで", "まででも"],
+    "answerIndex": 0,
+    "explanation": "「〜までに」= 〜까지(기한). 데드라인을 나타낼 때 써요. 「まで」는 '계속'의 의미예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "報告書を___、上司に送ってください。",
+    "choices": ["書いてから", "書いてみて", "書いておいて", "書いてしまって"],
+    "answerIndex": 0,
+    "explanation": "「〜てから」= 〜하고 나서. 순서를 나타내요. '보고서 쓰고 나서 보내세요'.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女の意見を___うえで、最終決定をした。",
+    "choices": ["聞いた", "聞く", "聞いて", "聞き"],
+    "answerIndex": 0,
+    "explanation": "「〜たうえで」= 〜한 다음에. '의견을 들은 후에 최종 결정을 했다'는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "来週の会議に___かどうか、まだわからない。",
+    "choices": ["参加できる", "参加する", "参加した", "参加して"],
+    "answerIndex": 0,
+    "explanation": "「〜かどうかわからない」= 〜인지 아닌지 모르다. 불확실할 때는 できる형이 자연스러워요.",
+    "category": "grammar"
+  },
+  {
+    "question": "患者の状態が悪化した___、すぐに医師に連絡した。",
+    "choices": ["ため", "ので", "から", "のに"],
+    "answerIndex": 0,
+    "explanation": "「〜ため」= 〜때문에. 객관적 원인/이유. 공식 문서나 보고에서 자주 쓰여요.",
+    "category": "grammar"
+  },
+  {
+    "question": "弊社の製品は品質が高い___、価格も手頃です。",
+    "choices": ["うえに", "のに", "わりに", "ために"],
+    "answerIndex": 0,
+    "explanation": "「品質が高いうえに価格도 手頃」= 품질 높은 데다가 가격도 합리적. 긍정 요소 추가할 때 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "薬を飲んだ___、まだ熱が下がらない。",
+    "choices": ["のに", "から", "ので", "けど"],
+    "answerIndex": 0,
+    "explanation": "「〜のに」= 〜인데도. 약을 먹었는데도 열이 안 내려간다는 불만/의외의 상황이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼の説明を聞いて、ようやく___。",
+    "choices": ["わかりました", "わかっています", "わかっていました", "わかります"],
+    "answerIndex": 0,
+    "explanation": "「ようやくわかった」= 드디어 알게 됐다. 「ようやく」는 어려운 과정 끝에 달성할 때 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この書類は明日___提出してください。",
+    "choices": ["までに", "までは", "まで", "までも"],
+    "answerIndex": 0,
+    "explanation": "「明日までに提出」= 내일까지 제출. 제출 기한을 나타낼 때는 「までに」를 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この仕事は一人で___には無理だ。",
+    "choices": ["やる", "やった", "やって", "やり"],
+    "answerIndex": 0,
+    "explanation": "「〜するには無理だ」= 〜하기엔 무리다. 동사 기본형 + には로 판단을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "電話___、すぐに知らせてください。",
+    "choices": ["があったら", "があれば", "があって", "があると"],
+    "answerIndex": 0,
+    "explanation": "「〜があったら」= 〜가 있으면(가정). 조건부 요청을 나타낼 때 「たら」형이 자연스러워요.",
+    "category": "grammar"
+  },
+  {
+    "question": "新薬の効果については、さらに___必要がある。",
+    "choices": ["研究する", "研究した", "研究して", "研究しない"],
+    "answerIndex": 0,
+    "explanation": "「さらに研究する必要がある」= 더 연구할 필요가 있다. 「必要がある」앞엔 동사 기본형이 와요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この映画は見る___ない。",
+    "choices": ["価値が", "必要が", "理由が", "意味が"],
+    "answerIndex": 0,
+    "explanation": "「見る価値がない」= 볼 가치가 없다. 「価値がない」는 가치 판단 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "友達と___が合わなくて、待ち合わせに失敗した。",
+    "choices": ["時間", "時刻", "タイミング", "スケジュール"],
+    "answerIndex": 2,
+    "explanation": "「タイミングが合わない」= 타이밍이 안 맞다. 약속 시간이 엇갈릴 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は毎日日記を___習慣がある。",
+    "choices": ["書く", "つける", "記す", "残す"],
+    "answerIndex": 1,
+    "explanation": "「日記をつける」= 일기를 쓰다. 日記는 書く도 되지만 「つける」가 가장 자연스러운 고정 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "急いでいたので、財布を家に___きてしまった。",
+    "choices": ["置いて", "忘れて", "残して", "落として"],
+    "answerIndex": 1,
+    "explanation": "「忘れてくる」= 두고 오다/잊고 오다. 집에 두고 온 상황에는 忘れる가 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は約束を___ことが多くて、信頼されていない。",
+    "choices": ["壊す", "破る", "消す", "やめる"],
+    "answerIndex": 1,
+    "explanation": "「約束を破る(やぶる)」= 약속을 어기다. 약속에는 반드시 破る를 써요. N3 필수 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "最近、体の___が悪くて、病院に行った。",
+    "choices": ["状態", "様子", "具合", "調子"],
+    "answerIndex": 3,
+    "explanation": "「体の調子(ちょうし)が悪い」= 몸 상태가 나쁘다. 건강 상태에는 調子가 가장 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女の___な説明のおかげで、よく理解できた。",
+    "choices": ["丁寧", "詳しい", "細かい", "具体的"],
+    "answerIndex": 3,
+    "explanation": "「具体的(ぐたいてき)な説明」= 구체적인 설명. 이해를 돕는 설명의 특징으로 가장 적합해요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼はすぐに___を立てて、行動する人だ。",
+    "choices": ["計画", "目標", "方針", "予定"],
+    "answerIndex": 0,
+    "explanation": "「計画(けいかく)を立てる」= 계획을 세우다. 「立てる」와 함께 쓰는 고정 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この問題について、先生に___を求めた。",
+    "choices": ["答え", "意見", "アドバイス", "助言"],
+    "answerIndex": 3,
+    "explanation": "「助言(じょげん)を求める」= 조언을 구하다. 윗사람에게 의견을 구할 때 쓰는 격식체 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は失敗を___に、次は成功した。",
+    "choices": ["経験", "参考", "教訓", "材料"],
+    "answerIndex": 2,
+    "explanation": "「失敗を教訓(きょうくん)に」= 실패를 교훈 삼아. 실패에서 배우는 표현으로 자주 쓰여요.",
+    "category": "vocab"
+  },
+  {
+    "question": "会議で自分の___をはっきり述べることが大切だ。",
+    "choices": ["考え", "意見", "気持ち", "立場"],
+    "answerIndex": 1,
+    "explanation": "「意見(いけん)を述べる」= 의견을 말하다. 회의 등 공식 상황에서 자신의 생각을 나타낼 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は困っている人を見ると、___に手伝おうとする。",
+    "choices": ["すぐ", "必ず", "自然と", "わざと"],
+    "answerIndex": 2,
+    "explanation": "「自然と(しぜんと)〜する」= 자연스럽게 〜하다. 의식하지 않고 저절로 행동하는 뉘앙스예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "その話を聞いて、思わず___が出た。",
+    "choices": ["笑い", "涙", "声", "言葉"],
+    "answerIndex": 1,
+    "explanation": "「涙(なみだ)が出る」= 눈물이 나다. 「思わず涙が出た」= 나도 모르게 눈물이 났다. 자주 출제되는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女とは___が合って、すぐ友達になった。",
+    "choices": ["気", "心", "性格", "趣味"],
+    "answerIndex": 0,
+    "explanation": "「気が合う(きがあう)」= 마음이 맞다/잘 통하다. 고정 표현으로 N3 빈출이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "長年の夢が___、とても嬉しかった。",
+    "choices": ["かなって", "実現して", "達成して", "成功して"],
+    "answerIndex": 0,
+    "explanation": "「夢がかなう」= 꿈이 이루어지다. 「夢」에는 かなう를 쓰는 것이 가장 자연스러운 고정 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "このカフェは___がよくて、よく来る。",
+    "choices": ["雰囲気", "環境", "様子", "状況"],
+    "answerIndex": 0,
+    "explanation": "「雰囲気(ふんいき)がいい」= 분위기가 좋다. 장소의 느낌을 표현할 때 雰囲気를 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は___を持って仕事に取り組んでいる。",
+    "choices": ["責任感", "自信", "やる気", "情熱"],
+    "answerIndex": 2,
+    "explanation": "「やる気を持って」= 의욕을 가지고. 일에 적극적으로 임하는 모습을 나타낼 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "CDのころの___が今も忘れられない。",
+    "choices": ["記憶", "思い出", "経験", "印象"],
+    "answerIndex": 1,
+    "explanation": "「思い出(おもいで)」= 추억. 과거의 즐거운 기억을 나타낼 때는 思い出를 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は___がよく、何でも覚えられる。",
+    "choices": ["頭", "記憶力", "才能", "能力"],
+    "answerIndex": 1,
+    "explanation": "「記憶力(きおくりょく)がいい」= 기억력이 좋다. 무엇이든 기억한다는 능력을 직접 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "このニュースは社会に大きな___を与えた。",
+    "choices": ["影響", "効果", "変化", "刺激"],
+    "answerIndex": 0,
+    "explanation": "「影響(えいきょう)を与える」= 영향을 주다. 사회적 파급력을 나타낼 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "夜中に___が聞こえて、目が覚めた。",
+    "choices": ["音", "声", "騒音", "物音"],
+    "answerIndex": 3,
+    "explanation": "「物音(ものおと)」= 물건 소리/인기척. 밤중에 들리는 정체 모를 소리에 가장 자연스러운 단어예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼の態度が___で、周りが困っている。",
+    "choices": ["わ가まま", "自己中心的", "無責任", "不誠実"],
+    "answerIndex": 0,
+    "explanation": "「わがまま」= 제멋대로/이기적. 주변 사람들이 곤란해하는 태도로 가장 자연스러운 단어예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この小説は読み___があって、一気に読んだ。",
+    "choices": ["応え", "甲斐", "価値", "がい"],
+    "answerIndex": 0,
+    "explanation": "「読み応え(よみごたえ)がある」= 읽는 보람이 있다. 내용이 충실해서 읽는 만족감이 있다는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は人の___をよく読める人だ。",
+    "choices": ["気持ち", "心理", "気配", "感情"],
+    "answerIndex": 0,
+    "explanation": "「気持ちを読む(よむ)」= 마음을 읽다. 상대방의 감정을 파악한다는 표현으로 자주 쓰여요.",
+    "category": "vocab"
+  },
+  {
+    "question": "試験前に___を繰り返すことが大切だ。",
+    "choices": ["勉強", "練習", "復習", "予習"],
+    "answerIndex": 2,
+    "explanation": "「復習(ふくしゅう)を繰り返す」= 복습을 반복하다. 시험 전 학습 방법으로 가장 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は誰に対しても___な態度で接하는。",
+    "choices": ["公平", "平等", "対等", "公正"],
+    "answerIndex": 0,
+    "explanation": "「公平(こうへい)な態度」= 공평한 태도. 누구에게나 편견 없이 대하는 모습을 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は自分のミスを素直に___した。",
+    "choices": ["謝罪", "反省", "認める", "告白"],
+    "answerIndex": 1,
+    "explanation": "「反省(はんせい)する」= 반성하다. 자신의 실수를 솔직하게 인정하고 돌아보는 행위예요.",
+    "category": "vocab"
+  },
+  {
+    "question": "このアイデアは___性が高いと思う。",
+    "choices": ["可能", "実現", "成功", "有効"],
+    "answerIndex": 0,
+    "explanation": "「可能性(かのうせい)が高い」= 가능성이 높다. 아이디어의 실현 여부를 말할 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼はどんな状況でも___を失わない人だ。",
+    "choices": ["冷静さ", "自信", "余裕", "落ち着き"],
+    "answerIndex": 0,
+    "explanation": "「冷静さ(れいせいさ)を失わない」= 냉정함을 잃지 않다. 어떤 상황에서도 침착한 사람을 묘사해요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は___を大切にしていて、毎日感謝している。",
+    "choices": ["人間関係", "友情", "絆", "縁"],
+    "answerIndex": 2,
+    "explanation": "「絆(きずな)を大切にする」= 유대를 소중히 하다. 사람들과의 깊은 연결을 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼の話は___があって、聞いていて飽きない。",
+    "choices": ["面白さ", "魅力", "興味", "深み"],
+    "answerIndex": 1,
+    "explanation": "「魅力(みりょく)がある」= 매력이 있다. 이야기가 흥미롭고 듣는 이를 끌어당기는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この計画には___な準備が必要だ。",
+    "choices": ["十分", "完璧", "徹底的", "丁寧"],
+    "answerIndex": 2,
+    "explanation": "「徹底的(てっていてき)な準備」= 철저한 준비. 빈틈없는 준비를 강조할 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は___に物事を考えるタイプだ。",
+    "choices": ["論理的", "合理的", "理論的", "科学的"],
+    "answerIndex": 0,
+    "explanation": "「論理的(ろんりてき)に考える」= 논리적으로 생각하다. 사고방식을 묘사할 때 가장 자주 쓰여요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は___が強くて、何があっても諦めない。",
+    "choices": ["意志", "根性", "精神力", "忍耐力"],
+    "answerIndex": 0,
+    "explanation": "「意志(いし)가 強い」= 의지가 강하다. 포기하지 않는 성격을 묘사하는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "子供の___を見守ることが親の役目だ。",
+    "choices": ["成長", "発展", "発達", "進歩"],
+    "answerIndex": 0,
+    "explanation": "「子供の成長(せいちょう)を見守る」= 아이의 성장을 지켜보다. 人に対して는 成長을 쓰는 것이 자연스러워요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は自分の___を信じて行動した。",
+    "choices": ["直感", "勘", "感覚", "感性"],
+    "answerIndex": 0,
+    "explanation": "「直感(ちょっかん)を信じる」= 직감을 믿다. 이성적 판단 없이 느낌으로 행동할 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この映画には深い___がある。",
+    "choices": ["意味", "意図", "内容", "メッセージ"],
+    "answerIndex": 3,
+    "explanation": "「深いメッセージがある」= 깊은 메시지가 있다. 영화나 작품의 주제/전달 내용을 나타낼 때 써요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は___をかけて、その問題に取り組んだ。",
+    "choices": ["時間", "情熱", "力", "命"],
+    "answerIndex": 1,
+    "explanation": "「情熱(じょうねつ)をかける」= 열정을 쏟다. 전력을 다해 임하는 모습을 나타내요.",
+    "category": "vocab"
+  },
+  {
+    "question": "長い___の末、ついに答えが見つかった。",
+    "choices": ["時間", "努力", "苦労", "研究"],
+    "answerIndex": 2,
+    "explanation": "「苦労(くろう)の末」= 고생 끝에. 긴 노력과 고생 후 결과를 얻었을 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女は何事も___に取り組む姿勢が評価されている。",
+    "choices": ["真剣", "真面目", "積極的", "誠実"],
+    "answerIndex": 1,
+    "explanation": "「真面目(まじめ)に取り組み」= 성실하게 임하다. 꾸준하고 성실한 태도를 나타내는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "この仕事には___な経験が必要だ。",
+    "choices": ["豊富", "十分", "幅広い", "深い"],
+    "answerIndex": 0,
+    "explanation": "「豊富(ほうふ)な経験」= 풍부한 경험. 경험의 양이 많음을 나타낼 때 쓰는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼は自分の___を素直に表現できる人だ。",
+    "choices": ["感情", "気持ち", "思い", "心"],
+    "answerIndex": 0,
+    "explanation": "「感情(かんじょう)を表現する」= 감정을 표현하다. 자신의 느낌을 겉으로 나타내는 표현이에요.",
+    "category": "vocab"
+  },
+  {
+    "question": "彼女が来る___、部屋を片付けておこう。",
+    "choices": ["前に", "までに", "のに", "ために"],
+    "answerIndex": 0,
+    "explanation": "「〜前に」= 〜하기 전에. 그녀가 오기 전에 방을 정리해두자는 의미예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "日本語が___ように、毎日練習している。",
+    "choices": ["話せる", "話す", "話した", "話せた"],
+    "answerIndex": 0,
+    "explanation": "「〜ように」= 〜할 수 있도록. 능력/상태 변화를 목표로 할 때는 가능형 + ように를 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は泣き___笑い___した。",
+    "choices": ["ながら", "つつ", "たり〜たり", "て〜て"],
+    "answerIndex": 2,
+    "explanation": "「〜たり〜たりする」= 〜하기도 하고 〜하기도 하다. 두 가지 동작을 번갈아 할 때 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "もし雨が降る___、試合は中止になる。",
+    "choices": ["なら", "と", "たら", "ば"],
+    "answerIndex": 1,
+    "explanation": "「〜と」= (조건) 〜하면. 자연현상/규칙적 결과를 나타낼 때 쓰여요. 비가 오면 자동으로 취소되는 규칙이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "先週から風邪を___いる。",
+    "choices": ["ひいて", "ひき", "ひいた", "ひく"],
+    "answerIndex": 0,
+    "explanation": "「風邪をひいている」= 감기에 걸려 있다. 상태가 계속되고 있음을 「〜ている」로 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この本は___読めば読む___面白くなる。",
+    "choices": ["ほど〜ほど", "だけ〜だけ", "ば〜ほど", "たら〜ほど"],
+    "answerIndex": 2,
+    "explanation": "「〜ば〜ほど」= 〜하면 할수록. '읽으면 읽을수록 재밌어진다'는 의미예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼に___もらえませんか。",
+    "choices": ["手伝って", "手伝い", "手伝う", "手伝い方"],
+    "answerIndex": 0,
+    "explanation": "「〜てもらえませんか」= 〜해 주실 수 있나요? 상대에게 정중하게 부탁할 때 쓰는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "このことは誰にも言わない___している。",
+    "choices": ["ことに", "ように", "つもりに", "はずに"],
+    "answerIndex": 0,
+    "explanation": "「〜ないことにする」= 〜하지 않기로 하다. 스스로 결정한 사항을 나타내는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は医者に___と言われた。",
+    "choices": ["休む", "休め", "休もう", "休んで"],
+    "answerIndex": 0,
+    "explanation": "「〜と言われた」= 〜라고 들었다. 전달 내용에는 기본형 또는 보통체를 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "試験が終わった___遊ぼう。",
+    "choices": ["あとで", "てから", "ら", "なら"],
+    "answerIndex": 0,
+    "explanation": "「〜あとで」= 〜한 후에. 「てから」와 비슷하지만 시간적 여유가 있는 뉘앙스예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼はお金が___くせに、いつもおごってくれない。",
+    "choices": ["ある", "あった", "あって", "あり"],
+    "answerIndex": 0,
+    "explanation": "「〜くせに」= 〜인데도(비난 뉘앙스). 돈이 있음에도 사주지 않는다는 불만을 담아요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この映画は子供___楽しめる。",
+    "choices": ["でも", "だけ", "しか", "ほど"],
+    "answerIndex": 0,
+    "explanation": "「子供でも楽しめる」= 어린이도 즐길 수 있다. 「でも」= 〜조차도/〜도. 최소 기준을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "急いで___のに、財布を忘れた。",
+    "choices": ["きた", "いた", "みた", "おいた"],
+    "answerIndex": 0,
+    "explanation": "「急いできたのに」= 서둘러 왔는데. 「〜てくる」= 〜해 오다. 이쪽 방향으로 이동하며 행동한 것을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "その話を聞いて、驚かずには___。",
+    "choices": ["いられなかった", "いられた", "いなかった", "いられる"],
+    "answerIndex": 0,
+    "explanation": "「〜ずにはいられない」= 〜하지 않을 수 없다. 감정이 억제되지 않는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は約束の時間に___はずなのに、まだ来ない。",
+    "choices": ["来る", "来た", "来て", "来ている"],
+    "answerIndex": 0,
+    "explanation": "「〜はずなのに」= 〜일 텐데도. 당연히 와야 하는데 오지 않는 상황의 의외감을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "このレポートは明日___です。",
+    "choices": ["提出のはず", "提出するはず", "提出のつもり", "提出する予定"],
+    "answerIndex": 3,
+    "explanation": "「〜する予定です」= 〜할 예정입니다. 확정된 계획을 정중히 나타내는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は___らしく、いつも周りに気を配っている。",
+    "choices": ["女性", "リーダー", "先輩", "大人"],
+    "answerIndex": 3,
+    "explanation": "「大人(おとな)らしく」= 어른답게. 「〜らしい」= 〜답다. 그 특성에 맞는 행동을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は忙しい___、いつも笑顔でいる。",
+    "choices": ["ものの", "のに", "くせに", "にもかかわらず"],
+    "answerIndex": 0,
+    "explanation": "「〜ものの」= 〜이긴 하지만. 바쁘긴 하지만 항상 웃는 얼굴이라는 양보를 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "その問題は簡単___、意外と難しかった。",
+    "choices": ["そうだったのに", "かと思ったたら", "と思ったから", "に見えたので"],
+    "answerIndex": 1,
+    "explanation": "「〜かと思ったら」= 〜인가 했더니. 예상과 다른 결과에 대한 놀라움을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女の話によると、来月結婚する___だ。",
+    "choices": ["らしい", "そうだ", "ようだ", "はずだ"],
+    "answerIndex": 0,
+    "explanation": "「〜によると〜らしい」= 〜에 따르면 〜인 것 같다. 전문 정보를 근거로 한 추측이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は一度決めた___、絶対に変えない。",
+    "choices": ["ことは", "こと", "ことを", "ことが"],
+    "answerIndex": 0,
+    "explanation": "「〜ことは変えない」= 한번 결정한 것은 바꾸지 않는다. 「こと」가 결정 내용을 명사화해요.",
+    "category": "grammar"
+  },
+  {
+    "question": "食事の___、手を洗うようにしている。",
+    "choices": ["前に", "後で", "最中に", "間に"],
+    "answerIndex": 0,
+    "explanation": "「食事の前に手を洗う」= 식사 전에 손을 씻다. 위생 습관으로 가장 자연스러운 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "このドラマは___見れば見る___はまる。",
+    "choices": ["見れば〜ほど", "見ると〜ほど", "見て〜ほど", "見た〜ほど"],
+    "answerIndex": 0,
+    "explanation": "「見れば見るほど」= 볼수록. 「〜ば〜ほど」패턴이에요. 동사 가정형 + 기본형 + ほど예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女に相談___、気持ちが楽になった。",
+    "choices": ["したら", "すると", "すれば", "してから"],
+    "answerIndex": 0,
+    "explanation": "「〜したら〜なった」= 〜했더니 〜됐다. 어떤 행동 후의 결과를 나타낼 때 たら를 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この問題は私___解決できない。",
+    "choices": ["だけ가", "しか", "だけでは", "のみ"],
+    "answerIndex": 2,
+    "explanation": "「私だけでは解決できない」= 나 혼자서는 해결할 수 없다. 「だけでは」= 〜만으로는(불충분).",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は仕事が終わる___すぐ帰る。",
+    "choices": ["と", "たら", "ば", "なら"],
+    "answerIndex": 0,
+    "explanation": "「〜と」= 〜하면(즉시). 일이 끝나면 바로 귀가하는 습관적 행동에 「と」가 자연스러워요.",
+    "category": "grammar"
+  },
+  {
+    "question": "A:「手伝いましょうか。」B:「___ください。」",
+    "choices": ["お願いして", "お願いし", "お願いして頂けますか", "お願いします"],
+    "answerIndex": 3,
+    "explanation": "「お願いします」= 부탁드립니다. 도움 제의에 수락할 때 가장 자연스럽고 정중한 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "試験に合格___かどうかは、努力次第だ。",
+    "choices": ["できる", "できた", "できる", "できて"],
+    "answerIndex": 0,
+    "explanation": "「〜できるかどうか」= 〜할 수 있는지 없는지. 가능 여부를 나타내는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は疲れて___のか、ソファで眠っていた。",
+    "choices": ["いた", "いる", "いた", "あった"],
+    "answerIndex": 0,
+    "explanation": "「疲れていたのか」= 피곤했던 것인지. 「〜ていた」는 과거의 지속적 상태를 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "先生に褒めて___、とても嬉しかった。",
+    "choices": ["もらって", "あげて", "くれて", "いただいて"],
+    "answerIndex": 3,
+    "explanation": "「〜ていただく」= 〜해 주시다(받다). 선생님께 칭찬을 받은 상황에서는 いただく가 경어로 적절해요.",
+    "category": "grammar"
+  },
+  {
+    "question": "この仕事は経験が___ほど、うまくなる。",
+    "choices": ["ある", "あった", "あれば", "あって"],
+    "answerIndex": 2,
+    "explanation": "「経験があればあるほど」= 경험이 있으면 있을수록. 「〜ば〜ほど」패턴이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は___ところ、急に電話が鳴った。",
+    "choices": ["寝ている", "寝ていた", "寝ようとしている", "寝ようとした"],
+    "answerIndex": 2,
+    "explanation": "「〜ようとしているところ」= 막 〜하려는 참에. 어떤 행동을 하려는 순간에 다른 일이 생겼을 때 써요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は怒って___ものの、すぐ機嫌が直った。",
+    "choices": ["いた", "いる", "あった", "いたり"],
+    "answerIndex": 0,
+    "explanation": "「〜ていたものの」= 〜했긴 했지만. 화가 났긴 했지만 바로 풀렸다는 양보예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "仕事が終わり___、映画を見に行こう。",
+    "choices": ["次第", "たら", "てから", "たあとで"],
+    "answerIndex": 0,
+    "explanation": "「〜次第(しだい)」= 〜하는 대로 즉시. 일이 끝나는 즉시 영화를 보러 가자는 의미예요.",
+    "category": "grammar"
+  },
+  {
+    "question": "こんなに難しいとは___なかった。",
+    "choices": ["思わ", "知ら", "考え", "わから"],
+    "answerIndex": 0,
+    "explanation": "「〜とは思わなかった」= 〜일 줄 몰랐다. 예상 밖의 상황에 대한 놀라움을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女は泣いている___、笑顔を見せた。",
+    "choices": ["にもかかわらず", "ものの", "のに", "くせに"],
+    "answerIndex": 0,
+    "explanation": "「〜にもかかわらず」= 〜임에도 불구하고. 울고 있음에도 불구하고 미소를 보인 역접이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "あの映画は見た___がある。",
+    "choices": ["こと", "もの", "はず", "わけ"],
+    "answerIndex": 0,
+    "explanation": "「〜たことがある」= 〜한 적이 있다. 과거 경험을 나타내는 N4~N3 핵심 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "田中さんは今日来ない___だ。",
+    "choices": ["はず", "らしい", "ようだ", "そうだ"],
+    "answerIndex": 0,
+    "explanation": "「〜はずだ」= 〜일 것이다(근거 있는 추측). 스케줄 등 확실한 근거가 있는 예상이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼女の言葉に傷つかない___がない。",
+    "choices": ["わけ", "はず", "こと", "もの"],
+    "answerIndex": 0,
+    "explanation": "「〜ないわけがない」= 〜하지 않을 리가 없다. 당연히 상처받는다는 강한 긍정을 나타내요.",
+    "category": "grammar"
+  },
+  {
+    "question": "会議は3時に始まる___になっている。",
+    "choices": ["こと", "はず", "よう", "もの"],
+    "answerIndex": 0,
+    "explanation": "「〜ことになっている」= 〜하게 되어 있다. 규칙/결정된 사항을 나타내는 표현이에요.",
+    "category": "grammar"
+  },
+  {
+    "question": "彼は優しい___、時々厳しいことも言う。",
+    "choices": ["反面", "ものの", "くせに", "わりに"],
+    "answerIndex": 0,
+    "explanation": "「〜反面(はんめん)」= 〜한 반면. 한 사람의 상반되는 두 면을 대비할 때 써요.",
+    "category": "grammar"
+  }
 ]
-
-with open('/home/claude/questions_full.json', 'w', encoding='utf-8') as f:
-    json.dump(questions, f, ensure_ascii=False, indent=2)
-
-vocab_count = sum(1 for q in questions if q['category'] == 'vocab')
-grammar_count = sum(1 for q in questions if q['category'] == 'grammar')
-print(f"총 {len(questions)}개 완성 (단어: {vocab_count}개, 문법: {grammar_count}개)")
-PYEOF
-python3 /home/claude/make_questions2.py
-출력
-
-총 132개 완성 (단어: 66개, 문법: 66개)
-
-Presented file
-완료
