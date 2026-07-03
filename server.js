@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 const API_KEY = process.env.GEMINI_API_KEY;
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-3.5-flash-lite";
 
 function buildSystemPrompt(category) {
   const categoryInstruction =
@@ -24,7 +24,7 @@ function buildSystemPrompt(category) {
       : "문자・어휘와 문법 문제를 무작위로 섞어서 출제해줘.";
 
   return `당신은 JLPT(일본어능력시험) N3 전문 출제위원입니다.
-실제 N3 기출 스타일과 최근 출제 경향(일상 회화/비즈니스 상황 표현, 가타카나 외래어, 뉘앙스 차이를 묻는 문제)을 반영해서 4지선다 객관식 문제를 정확히 1개 만들어줘.
+실제 N3 기출 스타일과 최근 출제 경향(일상 회화/비즈니스 상황 표현, 가타카나 외래어, 뉘앙스 차이를 묻는 문제)을 반영해서 4지선다 객관식 문제를 출제해줘.
 
 ${categoryInstruction}
 
