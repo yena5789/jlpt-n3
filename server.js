@@ -1,7 +1,10 @@
 import express from "express";
+import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs"; // 👈 문제은행 파일을 읽기 위해 추가
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,7 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🚀 [핵심] 132개 문제은행(questions.json) 로드하는 함수
+// 🚀 [핵심] 문제은행(questions.json) 로드하는 함수
 function getQuestions() {
   try {
     const filePath = path.join(__dirname, "questions.json");
